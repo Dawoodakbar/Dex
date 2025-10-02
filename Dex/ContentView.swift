@@ -16,15 +16,19 @@ struct ContentView: View {
     ) private var pokedex: FetchedResults
     
     @State private var searchText = ""
-    
+    @State private var filterByFavorites = false
     private var dynamicPredicate: NSPredicate {
         var predicates: [NSPredicate] = []
         
+        // Search predicate
         if !searchText.isEmpty {
             predicates.append(NSPredicate(format: "name contains[c] %@", searchText))
         }
         
         // Filter by favorite predicate
+        if filterByFavorites {
+            predicates.append(NSPredicate(format: "favorite == %d", true))
+        }
         
         // Comobine predicates
         return NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
@@ -48,8 +52,15 @@ struct ContentView: View {
                         .frame(width: 100, height: 100)
                         
                         VStack(alignment: .leading) {
-                            Text(pokemon.name!.capitalized)
-                                .fontWeight(.bold)
+                            HStack {
+                                Text(pokemon.name!.capitalized)
+                                    .fontWeight(.bold)
+                                
+                                if pokemon.favorite {
+                                    Image(systemName: "star.fill")
+                                        .foregroundStyle(.yellow)
+                                }
+                            }
                             
                             HStack {
                              ForEach(pokemon.types!, id: \.self) { type in // use types on type
@@ -71,6 +82,9 @@ struct ContentView: View {
             .navigationTitle("PokeDex")
             .searchable(text: $searchText, prompt: "Find a Pokemon")
             .autocorrectionDisabled()
+            .onChange(of: filterByFavorites, { oldValue, newValue in
+                pokedex.nsPredicate = dynamicPredicate
+            })
             .onChange(of: searchText, { oldValue, newValue in
                 pokedex.nsPredicate = dynamicPredicate
             })
@@ -79,7 +93,11 @@ struct ContentView: View {
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
+                    Button {
+                        filterByFavorites.toggle()
+                    } label: {
+                        Label("Filter By Favorites", systemImage: filterByFavorites ? "star.fill": "star")
+                    }
                 }
                 ToolbarItem {
                     Button("Add Item", systemImage: "plus") {
@@ -110,6 +128,8 @@ struct ContentView: View {
                     pokemon.speed = fetchedPokemon.speed
                     pokemon.sprite = fetchedPokemon.sprite
                     pokemon.shiny = fetchedPokemon.shiny
+                    
+                    
                     
                     try viewContext.save()
                 } catch {

@@ -19,6 +19,7 @@ struct FetchedPokemon: Decodable {
     let speed: Int16
     let sprite: URL
     let shiny: URL
+
     
     enum CodingKeys: CodingKey {
         case id
