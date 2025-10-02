@@ -15,7 +15,7 @@ struct FetchedPokemon: Decodable {
     let attack: Int16
     let defense: Int16
     let specialAttack: Int16
-    let sepcialDefense: Int16
+    let specialDefense: Int16
     let speed: Int16
     let sprite: URL
     let shiny: URL
@@ -76,7 +76,7 @@ struct FetchedPokemon: Decodable {
         attack = decodedStats[1]
         defense = decodedStats[2]
         specialAttack = decodedStats[3]
-        sepcialDefense = decodedStats[4]
+        specialDefense = decodedStats[4]
         speed = decodedStats[5]
         
         let spritesContainer = try container.nestedContainer(keyedBy: CodingKeys.SpriteKeys.self, forKey: .sprites)
