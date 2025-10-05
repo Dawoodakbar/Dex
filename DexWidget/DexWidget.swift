@@ -7,8 +7,26 @@
 
 import WidgetKit
 import SwiftUI
+import CoreData
 
 struct Provider: TimelineProvider {
+    
+    var randomPokemon: Pokemon {
+        var results: [Pokemon] = []
+        
+        do {
+            results = try PersistenceController.shared.container.viewContext.fetch(Pokemon.fetchRequest())
+        } catch {
+            print("Couldn't fetch the pokemon: \(error)")
+        }
+        
+        if let randomPokmen = results.randomElement() {
+            return randomPokmen
+        }
+        
+        return PersistenceController.previewPokemon
+    }
+    
     func placeholder(in context: Context) -> SimpleEntry {
         SimpleEntry.placeholder
     }
@@ -24,8 +42,15 @@ struct Provider: TimelineProvider {
         // Generate a timeline consisting of five entries an hour apart, starting from the current date.
         let currentDate = Date()
         for hourOffset in 0 ..< 5 {
-            let entryDate = Calendar.current.date(byAdding: .hour, value: hourOffset, to: currentDate)!
-            let entry = SimpleEntry.placeholder
+            let entryDate = Calendar.current.date(byAdding: .second, value: hourOffset * 5, to: currentDate)!
+            
+            let entryPokemon = randomPokemon
+            
+            let entry = SimpleEntry(date: entryDate,
+                                    name: entryPokemon.name!,
+                                    types: entryPokemon.types!,
+                                    sprite: entryPokemon.spriteImage)
+            entries.append(entry)
         }
 
         let timeline = Timeline(entries: entries, policy: .atEnd)
@@ -37,14 +62,14 @@ struct SimpleEntry: TimelineEntry {
     let date: Date
     let name: String
     let types: [String]
-    let sprites: Image
+    let sprite: Image
     
     static var placeholder: SimpleEntry {
-        SimpleEntry(date: .now, name: "bulbasuar", types: ["grass", "poison"], sprites: Image(.bulbasaur))
+        SimpleEntry(date: .now, name: "bulbasuar", types: ["grass", "poison"], sprite: Image(.bulbasaur))
     }
     
     static var placeholder2: SimpleEntry {
-        SimpleEntry(date: .now, name: "mew", types: ["psychic"], sprites: Image(.mew))
+        SimpleEntry(date: .now, name: "mew", types: ["psychic"], sprite: Image(.mew))
     }
     
 }
@@ -54,7 +79,7 @@ struct DexWidgetEntryView : View {
     var entry: Provider.Entry
 
     var pokemonImage: some View {
-        entry.sprites
+        entry.sprite
             .interpolation(.none)
             .resizable()
             .scaledToFit()
@@ -79,6 +104,7 @@ struct DexWidgetEntryView : View {
         switch widgetSize {
         case .systemMedium:
             HStack {
+                
                 pokemonImage
                 
                 Spacer()
